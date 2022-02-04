@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>HELLO WORLD</title>
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+		<script src="https://kit.fontawesome.com/5e4d9b3b67.js" crossorigin="anonymous"></script>
+	</head>
+	<body>
+		<div th:if="${erreurs != null}">
+			<div class="alert alert-danger" role="alert" th:each="item : ${erreurs}" th:text="${item}" />
+		</div>
+	
+		<div class="container">
+			<h1 style="text-align:center" th:text="${hello}" />
+			<div style="text-align:center" th:if="${personnes.size > 0}">
+				<em>
+					<span th:each="item : ${personnes}">
+						<b><span th:text="${item.prenom}" />&nbsp;<span th:text="${item.nom}" /></b> -
+					</span>
+					merci pour
+					<span th:if="${personnes.size == 1}">ton</span>
+					<span th:unless="${personnes.size == 1}">votre</span>
+					soutien envers ce site !
+				</em>
+			</div>
+			<hr>
+		</div>
+		<div class="ms-3 me-3 mt-5">
+			<h3>Voici quelques citations pour refaire votre journée !</h3>
+			<div class="mt-2" th:each="cita : ${citations}">
+				<div class='card mb-2' th:data-id="${cita.id}" th:data-val="${cita.valeur}" th:data-auteur="${cita.auteur}" th:data-taille="${citations.size}"
+				  onclick="showEdit(this.getAttribute('data-id'),this.getAttribute('data-val'),this.getAttribute('data-auteur'),this.getAttribute('data-taille'))">
+					<div class='card-body'>
+						<b th:text="${cita.auteur}" /> - <em th:text="${cita.valeur}" />
+					</div>
+				</div>
+			</div>
+		<div>
+			<button type="button" class="btn btn-success ms-3 mt-5" id="soutien" th:onclick="'javascript:showSoutien(' + ${citations.size} + ')'"><i class="fas fa-plus"></i>&nbsp;Soutien</button>
+			<button type="button" class="btn btn-success ms-3 mt-5" id="citation" th:onclick="'javascript:showCitation(' + ${citations.size} + ')'"><i class="fas fa-plus"></i>&nbsp;Citation</button>
+			
+			<button type="button" class="btn btn-danger me-3 mt-5" style="float:right" id="citationDel" th:onclick="'javascript:showCitationDel(' + ${citations.size} + ')'"><i class="fas fa-minus"></i>&nbsp;Citation</button>
+		</div>
+		
+		<div class="ms-3 mt-5">
+			<div id="formSoutien" style="display:none">
+				<form th:action="@{/hello/api/addSoutien}" method="POST">
+					<div>
+					    <label for="prenom" class="form-label">Prénom</label>
+					    <input type="text" class="form-control" id="prenom" style="width:25%" th:field="*{soutien.prenom}">
+					</div>
+					<div>
+					    <label for="nom" class="form-label mt-3">Nom</label>
+					    <input type="text" class="form-control" id="nom" style="width:25%" th:field="*{soutien.nom}">
+					</div>
+					<button type="submit" class="btn btn-primary mt-3 btn-sm">Ajouter</button>
+				</form>
+			</div>
+			<div id="formCitation" style="display:none">
+				<form th:action="@{/hello/api/addCitation}" method="POST">				
+					<div>
+					    <label for="auteur" class="form-label">Nom</label>
+					    <input type="text" class="form-control" id="auteur" style="width:25%" th:field="*{citation.auteur}">
+					</div>
+					<div>
+					    <label for="valeur" class="form-label mt-3">Citation</label>
+					    <input type="text" class="form-control" id="valeur" style="width:50%" th:field="*{citation.valeur}">
+					</div>
+					<button type="submit" class="btn btn-primary mt-3 btn-sm">Ajouter</button>
+				</form>
+			</div>
+			<div id="formCitationDel" style="display:none">
+				<div class="mt-3 ms-1 mb-1">Citations</div>
+				<div th:each="cit : ${citations}" style="display:inline-block">
+					<a th:href="@{/hello/api/deleteCitation/{id}(id=${cit.id})}" style="text-decoration:none;color:black">
+						<div class="card" style="width: 20rem; height:15rem">
+						  <div class="card-body">
+						    <h5 class="card-title" th:text="${cit.auteur}" />
+						    <p class="card-text" th:text="${cit.valeur}" />
+						  </div>
+						</div>
+					</a>
+				</div>
+			</div>
+			<div th:each="citation : ${citations}" th:id="'editCitation' + ${citation.id}" style="display:none">
+				<form id="edition" method="POST" th:action="@{/hello/api/editCitation/{id}(id=${citation.id})}">			
+					<div>
+						   <label for="auteur" class="form-label">Nom</label>
+						   <input type="text" class="form-control" th:id="'auteurEdit' + ${citation.id}" style="width:25%" th:field="*{citation.auteur}">
+					</div>
+					<div>
+						   <label for="valeur" class="form-label mt-3">Citation</label>
+						   <input type="text" class="form-control" th:id="'valeurEdit' + ${citation.id}" style="width:50%" th:field="*{citation.valeur}">
+					</div>
+					<button type="submit" class="btn btn-primary mt-3 btn-sm">Modifier</button>
+				</form>
+			</div>
+		</div>
+		
+		<script type="text/javascript">
+			
+			function showSoutien(siz) {
+				document.getElementById("formSoutien").style.display = "block";
+				document.getElementById("formCitation").style.display = "none";
+				document.getElementById("formCitationDel").style.display = "none";
+				for (let i=1;i<=siz;i++) document.getElementById("editCitation"+i).style.display = "none";
+			}
+			
+			function showCitation(siz) {
+				document.getElementById("formSoutien").style.display = "none";
+				document.getElementById("formCitation").style.display = "block";
+				document.getElementById("formCitationDel").style.display = "none";
+				for (let i=1;i<=siz;i++) document.getElementById("editCitation"+i).style.display = "none";
+			}
+			
+			function showCitationDel(siz) {
+				document.getElementById("formSoutien").style.display = "none";
+				document.getElementById("formCitation").style.display = "none";
+				document.getElementById("formCitationDel").style.display = "block";
+				for (let i=1;i<=siz;i++) document.getElementById("editCitation"+i).style.display = "none";
+			}
+			
+			function showEdit(id,valeur,auteur,tab) {
+				document.getElementById("formSoutien").style.display = "none";
+				document.getElementById("formCitation").style.display = "none";
+				document.getElementById("formCitationDel").style.display = "none";
+				document.getElementById("editCitation"+id).style.display = "block";
+				for (let i=1;i<=tab;i++) {
+					if (i != id) document.getElementById("editCitation"+i).style.display = "none";
+					else {
+						document.getElementById("editCitation"+i).style.display = "block";
+						document.getElementById("auteurEdit"+i).value = auteur;
+						document.getElementById("valeurEdit"+i).value = valeur;
+					}
+				}
+			}
+			
+		</script>
+	</body>
+</html>
